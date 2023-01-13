@@ -7,6 +7,6 @@ c <- a * b
 
 #De-vectorized approach (JAVA)
 d <- rep(NA, N)
-for(i in 1:N){
+for (i in 1:N) {
   d[i] <- a[i] * b[i]
 }
