@@ -190,17 +190,19 @@ ChrisPaul_FT <- c(394,292,332,455,161,337,260,286,295,289)
 KevinDurant_FT <- c(209,209,391,452,756,594,431,679,703,146)
 DerrickRose_FT <- c(146,146,146,197,259,476,194,0,27,152)
 DwayneWade_FT <- c(629,432,354,590,534,494,235,308,189,284)
-
-#Matrix for Free Throws
-#Bind the given vectors to form the matrix
-FreeThrows <- cbind(KobeBryant_FT, JoeJohnson_FT, LeBronJames_FT, CarmeloAnthony_FT, DwightHoward_FT, ChrisBosh_FT, ChrisPaul_FT, KevinDurant_FT, DerrickRose_FT, DwayneWade_FT)
-#Remove vectors - we don't need them anymore
-rm(KobeBryant_FT, JoeJohnson_FT, CarmeloAnthony_FT, DwightHoward_FT, ChrisBosh_FT, LeBronJames_FT, ChrisPaul_FT, DerrickRose_FT, DwayneWade_FT, KevinDurant_FT)
-#Rename the columns
+#Matrix
+FreeThrows <- rbind(KobeBryant_FT, JoeJohnson_FT,
+                    LeBronJames_FT, CarmeloAnthony_FT,
+                    DwightHoward_FT, ChrisBosh_FT,
+                    ChrisPaul_FT, KevinDurant_FT,
+                    DerrickRose_FT, DwayneWade_FT)
+rm(KobeBryant_FT, JoeJohnson_FT,
+   LeBronJames_FT, CarmeloAnthony_FT,
+   DwightHoward_FT, ChrisBosh_FT,
+   ChrisPaul_FT, KevinDurant_FT,
+   DerrickRose_FT, DwayneWade_FT)
 colnames(FreeThrows) <- Seasons
-#Rename the rows
 rownames(FreeThrows) <- Players
-
 #Check the matrix
 FreeThrows
 
@@ -215,18 +217,19 @@ ChrisPaul_FTA <- c(465,357,390,524,190,384,302,323,345,321)
 KevinDurant_FTA <- c(256,256,448,524,840,675,501,750,805,171)
 DerrickRose_FTA <- c(205,205,205,250,338,555,239,0,32,187)
 DwayneWade_FTA <- c(803,535,467,771,702,652,297,425,258,370)
-
-#Matrix for Free Throw Attempts
-#Bind the given vectors to form the matrix
-FreeThrowAttempts <- cbind(KobeBryant_FTA, JoeJohnson_FTA, LeBronJames_FTA, CarmeloAnthony_FTA, DwightHoward_FTA, ChrisBosh_FTA, ChrisPaul_FTA, KevinDurant_FTA, DerrickRose_FTA, DwayneWade_FTA)
-#Remove vectors - we don't need them anymore
-rm(KobeBryant_FTA, JoeJohnson_FTA, CarmeloAnthony_FTA, DwightHoward_FTA, ChrisBosh_FTA, LeBronJames_FTA, ChrisPaul_FTA, DerrickRose_FTA, DwayneWade_FTA, KevinDurant_FTA)
-#Rename the columns
+#Matrix
+FreeThrowAttempts <- rbind(KobeBryant_FTA, JoeJohnson_FTA,
+                           LeBronJames_FTA, CarmeloAnthony_FTA,
+                           DwightHoward_FTA, ChrisBosh_FTA,
+                           ChrisPaul_FTA, KevinDurant_FTA,
+                           DerrickRose_FTA, DwayneWade_FTA)
+rm(KobeBryant_FTA, JoeJohnson_FTA,
+   LeBronJames_FTA, CarmeloAnthony_FTA,
+   DwightHoward_FTA, ChrisBosh_FTA,
+   ChrisPaul_FTA, KevinDurant_FTA,
+   DerrickRose_FTA, DwayneWade_FTA)
 colnames(FreeThrowAttempts) <- Seasons
-#Rename the rows
 rownames(FreeThrowAttempts) <- Players
-
-#Check the matrix
 FreeThrowAttempts
 
 #Re-create the plotting function
@@ -239,20 +242,18 @@ myplot <- function(z, who=1:10) {
 myplot(FreeThrows)
 myplot(FreeThrowAttempts)
 
-#Part 1 - Free Throw Attempts Per Game 
-#(You will need the Games matrix)
+#1. Free Throw Attempts per Game
 myplot(FreeThrowAttempts / Games)
-#Notice how Chris Paul gets few attempts per game
 
-#Part 2 - Free Throw Accuracy
+#2. Free Throw Accuracy
+myplot(FreeThrows/FreeThrowAttempts)
 myplot(FreeThrows/FreeThrowAttempts, who = c(5, 7))
-#And yet Chris Paul's accuracy is one of the highest
-#Chances are his team would get more points if he had more FTA's
-#Also notice that Dwight Howard's FT Accuracy is extremely poor
-#compared to other players. If you recall, Dwight Howard's
-#Field Goal Accuracy was exceptional:
 
+#3. Field Goal Accuracy
 myplot(FieldGoals/FieldGoalAttempts)
+
+#4. Player Style Patterns Excluding Free Throws
+myplot((Points - FreeThrows)/FieldGoals)
 
 #######################
 
