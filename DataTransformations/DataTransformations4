@@ -1,1 +1,118 @@
+Sys.setenv(JAVA_OPTS = "-Xmx8g")
 
+# galējai savienošanai
+options(digits = 22)
+
+# Ielādē faila šablonu
+setwd("F:\\Darba_faili\\Fails")
+
+LCI2023 <-
+  read.table("INDEX_Q_LV_2023_0001.csv", sep = ";") #23 472
+
+LCI2023$V3 <- factor(LCI2023$V3)
+levels(LCI2023$V3)
+
+LCI2023$V11 <- factor(LCI2023$V11)
+levels(LCI2023$V11)
+
+#!!!------------ Uzreiz izveidojam order vector, jo citādi pēc tam to tabulu nesavākt
+
+LCI2023$ORDER <-
+  paste(
+    LCI2023$V1,
+    LCI2023$V2,
+    LCI2023$V3,
+    LCI2023$V4,
+    LCI2023$V5,
+    LCI2023$V6,
+    LCI2023$V11,
+    sep = "_"
+  )
+garais_orderVec <- LCI2023$ORDER
+LCI2023$V9 <- "F"
+LCI2023$V10 <- "2020"
+
+# Izvēlamies HW 
+LCI2022_HW <- LCI2023[LCI2023$V11 == "HW",] # 288 rows
+rownames(LCI2022_HW) <- NULL
+rm(LCI2023)
+
+HW_rowOrder <- LCI2022_HW$ORDER
+HW_colOrder_vec <- colnames(LCI2022_HW)
+
+# Ielādējam izstrādātos HW no tabulas DVS010c
+
+setwd('F:\\Darba_faili\\Fails')
+DVS010c_forHW <- read.table("DVS010c_forHW.csv", sep = ";")
+
+colnames(DVS010c_forHW) <- DVS010c_forHW[1,]
+DVS010c_forHW <- DVS010c_forHW[-1,]
+rownames(DVS010c_forHW) <- NULL
+
+HW_data_LCI2023_Q1 <-
+  DVS010c_forHW[DVS010c_forHW$SECTOR == "TOTAL" &
+                  DVS010c_forHW$WORKTIME == "TOTAL" , c(1, 2, 3, 4, 7)]
+HW_data_LCI2023_Q1 <-
+  HW_data_LCI2023_Q1[HW_data_LCI2023_Q1$TIME == "2023Q1",]
+rm(DVS010c_forHW)
+
+# Tagad no šablona izņemam tikai tos NACE burtus, kurus mums vajag.
+
+HW_burti <- LCI2022_HW[LCI2022_HW$V6 == "2022-Q4",]
+HW_burti <- HW_burti$V5
+
+HW_data_LCI2023_Q1 <-
+  HW_data_LCI2023_Q1[HW_data_LCI2023_Q1$NACE %in% HW_burti,]
+rownames(HW_data_LCI2023_Q1) <- NULL
+rm(HW_burti)
+
+HW_data_LCI2023_Q1$Order <-
+  paste0(substr(LCI2022_HW$ORDER[1:nrow(HW_data_LCI2023_Q1)], 1, nchar(LCI2022_HW$ORDER) - 10), "2023Q1_HW")
+HW2023_rowOrder <- HW_data_LCI2023_Q1$Order
+
+#No lci2022_HW veidojam šablonu
+
+HW_2023Q1 <- LCI2022_HW[1:nrow(HW_data_LCI2023_Q1),]
+#MOMENTĀLI, lai nekas nesajaucas pārrakstam vērtības
+HW_2023Q1$V6 <- "2023-Q1"
+HW_2023Q1$V7 <- ""
+HW_2023Q1$ORDER <- HW2023_rowOrder
+
+# rindu kārtība saglabājas HW2023_rowOrder vektorā
+
+#---------------------------------------------
+#No DATA_LCI2023_Q1WDA paņemam 2023. gadu Q1
+
+# savienojam HW 2023Q1 tabulas priekš LCI
+merge_HW2023Q1 <-
+  merge(HW_2023Q1,
+        HW_data_LCI2023_Q1[, c("HW", "Order")],
+        by.x = "ORDER",
+        by.y = "Order")
+
+#Uzreiz pārceļam datus, un sakārtojam tabulu
+merge_HW2023Q1$V7 <- merge_HW2023Q1$"HW"
+merge_HW2023Q1 <- merge_HW2023Q1[, HW_colOrder_vec]
+lci2023Q1_HW <- merge_HW2023Q1
+
+#Aizvācam lieko un sakārtojam rindas
+rm(HW_2023Q1, HW_data_LCI2023_Q1, merge_HW2023Q1)
+
+lci2023Q1_HW <-
+  lci2023Q1_HW[order(match(lci2023Q1_HW$ORDER, HW2023_rowOrder)),]
+rownames(lci2023Q1_HW) <- NULL
+
+# And now let's bind all the HW values, and it will be done
+LCI2023Q1_HW <- rbind(LCI2022_HW, lci2023Q1_HW)
+rm(LCI2022_HW, lci2023Q1_HW, HW2023_rowOrder)
+
+# pārbaude
+sum(colnames(LCI2023Q1_HW) == HW_colOrder_vec) == ncol(LCI2023Q1_HW)
+
+# rm(garais_orderVec)
+
+# Final - bet to tikai atdzīvini pašās beigās
+#LCI2023_Q1_nonAdjusted$ORDER <- NULL
+rm(HW_colOrder_vec, HW_rowOrder)
+
+# UN IZPRINTĒ
