@@ -1,1 +1,158 @@
+Sys.setenv(JAVA_OPTS = "-Xmx8g")
 
+# Galējai savienošanai
+options(digits = 22)
+
+# Ielādējam faila šablonu
+setwd("F:\\Darba_faili\\Fails")
+
+LCI2023 <-
+  read.table("INDEX_Q_LV_2023_0001.csv", sep = ";") #23 472
+
+LCI2023$V3 <- factor(LCI2023$V3)
+levels(LCI2023$V3)
+
+LCI2023$V11 <- factor(LCI2023$V11)
+levels(LCI2023$V11)
+
+#!!!------------ Uzreiz izveidojam order vector, jo citādi pēc tam to tabulu nesavākt
+
+LCI2023$ORDER <-
+  paste(
+    LCI2023$V1,
+    LCI2023$V2,
+    LCI2023$V3,
+    LCI2023$V4,
+    LCI2023$V5,
+    LCI2023$V6,
+    LCI2023$V11,
+    sep = "_"
+  )
+originalOrder_2000_2022 <- LCI2023$ORDER
+LCI2023$V9 <- "F"
+LCI2023$V10 <- "2020"
+LCI2023$V7 <- ""
+
+# Izvēlamies non-adjasted NACE grupas
+LCI2023_non_adjusted <-
+  LCI2023[LCI2023$V3 == "N" & LCI2023$V11 == "IX",] #7728
+rm(LCI2023)
+
+rowOrder_vec <- LCI2023_non_adjusted$ORDER
+colOrder_vec <- colnames(LCI2023_non_adjusted)
+
+# Ielādējam izstrādātos non-adjusted indeksus no dokumenta aprekini.xlsx.
+
+setwd('F:\\Darba_faili\\1_sagatavosana')
+
+library(XLConnect)
+wb <- loadWorkbook("aprekini.xlsx",
+                   create = FALSE,
+                   password = NULL)
+
+setwd('C:\\Users\\atetere\\Documents')
+worksheet <- readWorksheet(wb, sheet = "all_transpose")
+rm(wb)
+
+colnames(worksheet) <- worksheet[1,]
+worksheet <- worksheet[-1,]
+rownames(worksheet) <- NULL
+
+DATA_2023_non_adjusted <- worksheet[1:7812 , 1:5]
+rm(worksheet)
+
+DATA_2023_non_adjusted$Order <-
+  LCI2023_non_adjusted$ORDER[1:nrow(DATA_2023_non_adjusted)]
+DATA_2023_non_adjusted$Order[7729:nrow(DATA_2023_non_adjusted)] <-
+  paste0(substr(
+    LCI2023_non_adjusted$ORDER[1:(nrow(DATA_2023_non_adjusted) - nrow(LCI2023_non_adjusted))],
+    1,
+    nchar(LCI2023_non_adjusted$ORDER) - 7
+  ), "2023-Q1")
+rowOrder_vec1 <- DATA_2023_non_adjusted$Order
+
+#OK tagad sapludinam līdz 2022 gadam
+LCI2022_non_adjusted
+merge_lci2022 <-
+  merge(
+    LCI2023_non_adjusted,
+    DATA_2023_non_adjusted[1:nrow(LCI2023_non_adjusted),],
+    by.x = "ORDER",
+    by.y = "Order"
+  )
+
+# pārnesam vērtības
+merge_lci2022$"V7" <- merge_lci2022$"1"
+merge_lci2022$"1" <- NULL # un izdzēšam datu aili
+merge_lci2022[, 19] <- NULL
+merge_lci2022[, c("Gads",  "Q", "Nace")] <- NULL
+
+# Sakārtojam ailes
+merge_lci2022 <- merge_lci2022[, colOrder_vec]
+
+# sakārtojam rindas
+merge_lci2022 <-
+  merge_lci2022[order(match(merge_lci2022$ORDER, rowOrder_vec)),]
+rownames(merge_lci2022) <- NULL
+
+lci2022_nonAdjusted <- merge_lci2022
+rm(LCI2023_non_adjusted, merge_lci2022)
+
+# sakopies, satīries, un izveidojam tabulu 2023Q1, ko pievienot galā
+#No lci2022_nonAdjusted veidojam šablonu
+
+lci2023_nonAdjusted <-
+  lci2022_nonAdjusted[1:(nrow(DATA_LCI2023_non_adjusted) - nrow(lci2022_nonAdjusted)),]
+#MOMENTĀLI, lai nekas nesajaucas pārrakstam vērtības
+lci2023_nonAdjusted$V6 <- "2023-Q1"
+lci2023_nonAdjusted$V7 <- ""
+
+lci2023_nonAdjusted$ORDER <-
+  paste0(substr(
+    lci2023_nonAdjusted$ORDER,
+    1,
+    nchar(lci2023_nonAdjusted$ORDER) - 7
+  ), "2023-Q1")
+# SAGLABĀ KĀRTĪBU
+rowVec_lci2023_nonAdjusted <- lci2023_nonAdjusted$ORDER
+
+#No DATA_LCI2023_non_adjusted paņemam 2023. gadu Q1
+dati_lci2023 <-
+  DATA_LCI2023_non_adjusted[DATA_LCI2023_non_adjusted$"Gads" == "2023",]
+rownames(dati_lci2023) <- NULL
+rm(DATA_LCI2023_non_adjusted)
+
+# savienojam lci2023 tabulas
+merge_lci2023Q1 <-
+  merge(lci2023_nonAdjusted,
+        dati_lci2023[, c("1", "Order")],
+        by.x = "ORDER",
+        by.y = "Order")
+
+#Uzreiz pārceļam datus, un sakārtojam tabulu
+merge_lci2023Q1$V7 <- merge_lci2023Q1$"1"
+merge_lci2023Q1 <- merge_lci2023Q1[, colOrder_vec]
+lci2023Q1_nonAdjusted <- merge_lci2023Q1
+
+#Aizvācam lieko un sakārtojam rindas
+rm(lci2023_nonAdjusted, dati_lci2023, merge_lci2023Q1)
+
+lci2023Q1_nonAdjusted <-
+  lci2023Q1_nonAdjusted[order(match(lci2023Q1_nonAdjusted$ORDER, rowVec_lci2023_nonAdjusted)),]
+rownames(lci2023Q1_nonAdjusted) <- NULL
+
+# And now let's bind all the non-adjusted values, and it will be done
+LCI2023_Q1_nonAdjusted <-
+  rbind(lci2022_nonAdjusted, lci2023Q1_nonAdjusted)
+rm(lci2022_nonAdjusted, lci2023Q1_nonAdjusted, rowOrder_vec)
+
+# pārbaude
+sum(LCI2023_Q1_nonAdjusted$ORDER == rowOrder_vec1) == nrow(LCI2023_Q1_nonAdjusted)
+sum(colnames(LCI2023_Q1_nonAdjusted) == colOrder_vec) == ncol(LCI2023_Q1_nonAdjusted)
+
+# Final - bet to tikai atdzīvini pašās beigās
+#LCI2023_Q1_nonAdjusted$ORDER <- NULL
+rm(colOrder_vec, rowOrder_vec1, rowVec_lci2023_nonAdjusted)
+
+
+# UN IZPRINTĒ
