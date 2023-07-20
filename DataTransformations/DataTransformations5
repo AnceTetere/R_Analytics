@@ -1,0 +1,31 @@
+# Tabulai 23742 rindas
+(nrow(LCI2023_Q1_nonAdjusted) + nrow(LCI2023_Q1Y) + nrow(LCI2023_Q1W) + nrow(LCI2023Q1_HW)) = 23742
+
+LCI2023_Q1_EUstat <-
+  rbind(LCI2023_Q1_nonAdjusted,
+        LCI2023_Q1Y,
+        LCI2023_Q1W,
+        LCI2023Q1_HW)
+rm(LCI2023_Q1_nonAdjusted,
+   LCI2023_Q1Y,
+   LCI2023_Q1W,
+   LCI2023Q1_HW)
+
+LCI2023_Q1_EUstat <-
+  LCI2023_Q1_EUstat[order(LCI2023_Q1_EUstat$V6),]
+LCI2023_Q1_EUstat$ORDER <- NULL
+rm(garais_orderVec, originalOrder_2000_2022)
+
+# Nomainam nosaukumu, lai sakrīt ar printout
+INDEX_Q_LV_2023_0001 <- LCI2023_Q1_EUstat
+rm(LCI2023_Q1_EUstat)
+
+# Printout
+write.table(
+  INDEX_Q_LV_2023_0001,
+  "INDEX_Q_LV_2023_0001.csv",
+  sep = ";",
+  row.names = FALSE,
+  col.names = FALSE,
+  qmethod = "double"
+)

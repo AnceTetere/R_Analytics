@@ -1,0 +1,115 @@
+#Sys.setenv(JAVA_OPTS = "-Xmx8g")
+source(
+  "F:\\Documents\\DII010c_2000_2022.R"
+) # 5244 rows
+rm(DII010c_2000_2022_SA)
+
+# ! Uzreiz paņem order
+NSA_order_2000_2022 <- DII010c_2000_2022_NSA$ORDER # 5224
+
+# izstrādā uzreiz 2023Q1
+
+DII010c_2022Q4_NSA <-
+  DII010c_2000_2022_NSA[DII010c_2000_2022_NSA$TIME == "2022Q4",] #57
+DII010c_2022Q4_NSA$TIME <- "2023Q1"
+DII010c_2023Q1_NSA <- DII010c_2022Q4_NSA
+rm(DII010c_2022Q4_NSA)
+
+colOrder_vec <- colnames(DII010c_2023Q1_NSA)
+DII010c_2023Q1_NSA$ORDER <-
+  paste0("2023Q1", (substr(
+    DII010c_2023Q1_NSA$ORDER, 7, nchar(DII010c_2023Q1_NSA$ORDER)
+  )))
+DII010c_2023Q1_NSA_orderVec <- DII010c_2023Q1_NSA$ORDER
+
+# Make a new grand order vector including 2023Q1
+originalOrder_2000_2023 <-
+  append(originalOrder_2000_2022, DII010c_2023Q1_NSA_orderVec) # 10545
+originalOrder_2000_2023 <-
+  append(originalOrder_2000_2023, DII010c_2023Q1_NSA_orderVec) # 10602
+
+
+NSA_order_2000_2023 <-
+  append(NSA_order_2000_2022, DII010c_2023Q1_NSA_orderVec) # 5301
+rm(originalOrder_2000_2022, NSA_order_2000_2022)
+
+# Let's make a data frame
+DII010c_2000_2023 <-
+  rbind(DII010c_2000_2022_NSA, DII010c_2023Q1_NSA)
+rm(DII010c_2000_2022_NSA, DII010c_2023Q1_NSA)
+
+# Ielādējam izstrādātos non-adjusted indeksus no dokumenta LCI_2023_aprekini.xlsx.
+
+setwd(
+  'F:\\DARBS\\1_sagatavosana_2023'
+)
+
+library(XLConnect)
+wb <- loadWorkbook("LCI_2023_aprekini.xlsx",
+                   create = FALSE,
+                   password = NULL)
+
+setwd('C:\\Users\\atetere\\Documents')
+worksheet <- readWorksheet(wb, sheet = "all_transpose (2)") # 8065
+rm(wb)
+
+colnames(worksheet) <- worksheet[1, ]
+colnames(worksheet)[4] <- "nosaukums"
+
+worksheet <- worksheet[-1, ]
+rownames(worksheet) <- NULL
+
+LCI2000_2023_non_adjusted <- worksheet[, 1:5]
+rm(worksheet)
+
+# paņem uzreiz kārtību, kaut arī to var nevajadzēt
+colnames(LCI2000_2023_non_adjusted)
+LCI2000_2023_non_adjusted$order <-
+  paste(
+    LCI2000_2023_non_adjusted$Gads,
+    "Q",
+    LCI2000_2023_non_adjusted$Q,
+    LCI2000_2023_non_adjusted$Nace,
+    LCI2000_2023_non_adjusted$nosaukums,
+    sep = "_"
+  )
+LCI2000_2023_non_adjusted_vec1 <- LCI2000_2023_non_adjusted$order
+
+# OK, šitie tad ir jādala sīkāk
+DII010c_2000_2023$INDICATOR <- factor(DII010c_2000_2023$INDICATOR)
+levels(DII010c_2000_2023$INDICATOR)
+
+DII010c_2000_2023_INDICATOR <-
+  split(DII010c_2000_2023, DII010c_2000_2023$INDICATOR)
+names(DII010c_2000_2023_INDICATOR)[names(DII010c_2000_2023_INDICATOR) == "LC_TOTAL"] <-
+  "LC_TOTAL_DII010c_2000_2023NSA"
+names(DII010c_2000_2023_INDICATOR)[names(DII010c_2000_2023_INDICATOR) == "LC_WAG_TOT"] <-
+  "LC_WAG_TOT_DII010c_2000_2023_NSA"
+names(DII010c_2000_2023_INDICATOR)[names(DII010c_2000_2023_INDICATOR) == "LC_OTH"] <-
+  "LC_OTH_TOT_DII010c_2000_2023_NSA"
+list2env(DII010c_2000_2023_INDICATOR, envir = .GlobalEnv)
+rm(DII010c_2000_2023_INDICATOR, DII010c_2000_2023)
+
+# Un tad mums ir datu fails - to arī sadali
+LCI2000_2023_non_adjusted$nosaukums <-
+  factor(LCI2000_2023_non_adjusted$nosaukums)
+levels(LCI2000_2023_non_adjusted$nosaukums)
+
+LCI2000_2023_non_adjusted_nosaukums <-
+  split(LCI2000_2023_non_adjusted,
+        LCI2000_2023_non_adjusted$nosaukums)
+names(LCI2000_2023_non_adjusted_nosaukums)[names(LCI2000_2023_non_adjusted_nosaukums) == "Total"] <-
+  "dataTotal_LCI2000_2023NSA"
+names(LCI2000_2023_non_adjusted_nosaukums)[names(LCI2000_2023_non_adjusted_nosaukums) == "Wages"] <-
+  "dataWages_LCI2000_2023NSA"
+names(LCI2000_2023_non_adjusted_nosaukums)[names(LCI2000_2023_non_adjusted_nosaukums) == "Other"] <-
+  "dataOther_LCI2000_2023NSA"
+names(LCI2000_2023_non_adjusted_nosaukums)[names(LCI2000_2023_non_adjusted_nosaukums) == "Total except bonuses"] <-
+  "dataTXB_LCI2000_2023NSA"
+list2env(LCI2000_2023_non_adjusted_nosaukums, envir = .GlobalEnv)
+rm(
+  LCI2000_2023_non_adjusted_nosaukums,
+  LCI2000_2023_non_adjusted,
+  dataTXB_LCI2000_2023NSA
+)
+

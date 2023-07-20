@@ -1,0 +1,125 @@
+source(
+  "F:\\DATA\\DII010c_2000_2022.R"
+) # 5244 rows
+rm(DII010c_2000_2022_NSA)
+
+# ! Uzreiz paņem order
+SA_order_2000_2022 <- DII010c_2000_2022_SA$ORDER # 5224
+rownames(DII010c_2000_2022_SA) <- NULL
+
+# izstrādājam uzreiz 2023Q1
+
+DII010c_2022Q4_SA <-
+  DII010c_2000_2022_SA[DII010c_2000_2022_SA$TIME == "2022Q4",] #57
+DII010c_2022Q4_SA$TIME <- "2023Q1"
+rownames(DII010c_2022Q4_SA) <- NULL
+DII010c_2023Q1_SA <- DII010c_2022Q4_SA
+rm(DII010c_2022Q4_SA)
+
+colOrder_vec <- colnames(DII010c_2023Q1_SA)
+DII010c_2023Q1_SA$ORDER <-
+  paste0("2023Q1", (substr(
+    DII010c_2023Q1_SA$ORDER, 7, nchar(DII010c_2023Q1_SA$ORDER)
+  )))
+DII010c_2023Q1_SA_orderVec <- DII010c_2023Q1_SA$ORDER
+
+# Make a new grand order vector including 2023Q1
+originalOrder_2000_2023 <-
+  append(originalOrder_2000_2022, DII010c_2023Q1_SA_orderVec) # 10545
+SA_order_2000_2023 <-
+  append(SA_order_2000_2022, DII010c_2023Q1_SA_orderVec) # 5301
+
+# Let's make a data frame
+DII010c_2000_2023_SA <-
+  rbind(DII010c_2000_2022_SA, DII010c_2023Q1_SA)
+rownames(DII010c_2000_2023_SA) <- NULL
+rm(
+  DII010c_2000_2022_SA,
+  DII010c_2023Q1_SA,
+  SA_order_2000_2022,
+  originalOrder_2000_2022,
+  DII010c_2023Q1_SA_orderVec
+)
+
+# Ielādējam izstrādātos seasonal-adjusted indeksus no dokumenta LCI_2023_aprekini.xlsx.
+
+setwd('F:\\DII010c\\Dati')
+
+library(XLConnect)
+wb <- loadWorkbook("LCI_2023_C1_SA.xls",
+                   create = FALSE,
+                   password = NULL)
+
+setwd('C:\\Users\\atetere\\Documents')
+worksheet <- readWorksheet(wb, sheet = "all_transposed") # 7813
+rm(wb)
+
+colnames(worksheet)[1] <- "Nace"
+colnames(worksheet)[2] <- "DI komponents"
+colnames(worksheet)[3] <- "I2020_SA"
+
+worksheet <- worksheet[-1, ]
+rownames(worksheet) <- NULL
+
+datiLCI_2000_2023_SA <- worksheet[, 1:3] # 7812 rows
+rm(worksheet)
+
+# no datiLCI_2000_2023_SA izņemt NACE agregātus B-N un O-S
+datiLCI_2000_2023_SA <-
+  datiLCI_2000_2023_SA[datiLCI_2000_2023_SA$Nace != "B_N LASP" &
+                         datiLCI_2000_2023_SA$Nace != "O_S Lasp",] #7068
+
+# paņem uzreiz kārtību, kaut arī to var nevajadzēt
+#colnames(LCI2000_2023_seasonally_adjusted)
+datiLCI_2000_2023_SA$order <-
+  paste(
+    datiLCI_2000_2023_SA$Nace,
+    datiLCI_2000_2023_SA$`DI komponents`,
+    datiLCI_2000_2023_SA$I2020_SA,
+    sep = "_"
+  )
+LCI2000_2023_SA_vec1 <- datiLCI_2000_2023_SA$order
+
+# OK, šitie tad ir jādala sīkāk
+DII010c_2000_2023_SA$INDICATOR <-
+  factor(DII010c_2000_2023_SA$INDICATOR)
+levels(DII010c_2000_2023_SA$INDICATOR)
+
+DII010c_2000_2023_SA_INDICATOR <-
+  split(DII010c_2000_2023_SA, DII010c_2000_2023_SA$INDICATOR)
+names(DII010c_2000_2023_SA_INDICATOR)[names(DII010c_2000_2023_SA_INDICATOR) == "LC_TOTAL"] <-
+  "LC_TOTAL_DII010c_2000_2023_SA"
+names(DII010c_2000_2023_SA_INDICATOR)[names(DII010c_2000_2023_SA_INDICATOR) == "LC_WAG_TOT"] <-
+  "LC_WAG_TOT_DII010c_2000_2023_SA"
+names(DII010c_2000_2023_SA_INDICATOR)[names(DII010c_2000_2023_SA_INDICATOR) == "LC_OTH"] <-
+  "LC_OTH_TOT_DII010c_2000_2023_SA"
+list2env(DII010c_2000_2023_SA_INDICATOR, envir = .GlobalEnv)
+rm(DII010c_2000_2023_SA_INDICATOR, DII010c_2000_2023_SA)
+
+# Un tad mums ir datu fails - to arī sadali
+datiLCI_2000_2023_SA$`DI komponents` <-
+  factor(datiLCI_2000_2023_SA$`DI komponents`)
+levels(datiLCI_2000_2023_SA$`DI komponents`)
+
+datiLCI_2000_2023_SA_DIkomponents <-
+  split(datiLCI_2000_2023_SA, datiLCI_2000_2023_SA$`DI komponents`)
+names(datiLCI_2000_2023_SA_DIkomponents)[names(datiLCI_2000_2023_SA_DIkomponents) == "Total"] <-
+  "dataTotal_LCI2000_2023SA"
+names(datiLCI_2000_2023_SA_DIkomponents)[names(datiLCI_2000_2023_SA_DIkomponents) == "Wages"] <-
+  "dataWages_LCI2000_2023SA"
+names(datiLCI_2000_2023_SA_DIkomponents)[names(datiLCI_2000_2023_SA_DIkomponents) == "Other"] <-
+  "dataOther_LCI2000_2023SA"
+names(datiLCI_2000_2023_SA_DIkomponents)[names(datiLCI_2000_2023_SA_DIkomponents) == "Total except bonuses"] <-
+  "dataTXB_LCI2000_2023SA"
+list2env(datiLCI_2000_2023_SA_DIkomponents, envir = .GlobalEnv)
+rm(datiLCI_2000_2023_SA_DIkomponents,
+   datiLCI_2000_2023_SA,
+   dataTXB_LCI2000_2023SA)
+
+rownames(dataOther_LCI2000_2023SA) <- NULL
+rownames(dataTotal_LCI2000_2023SA) <- NULL
+rownames(dataWages_LCI2000_2023SA) <- NULL
+rownames(LC_OTH_TOT_DII010c_2000_2023_SA) <- NULL
+rownames(LC_TOTAL_DII010c_2000_2023_SA) <- NULL
+rownames(LC_WAG_TOT_DII010c_2000_2023_SA) <- NULL
+
