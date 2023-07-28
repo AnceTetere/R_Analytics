@@ -1,4 +1,4 @@
-setwd('F:\\Dati\\2019')
+setwd('F:\\2019')
 
 library(XLConnect)
 wb <- loadWorkbook("SEKT_19.xlsx",
@@ -24,5 +24,5 @@ paste(
 library(Rmpfr)
 
 PRIV_KopejasDI_2019 <-
-  mpfr(PRIV_ntabl327_2019$G5[PRIV_ntabl327_2019$NOZARE2 == "0"], precBits = 64)
+  mpfr(PRIV_ntabl327_2019$G5[PRIV_ntabl327_2019$NOZARE2 == "0"], precBits = 64) 
 rm(PRIV_ntabl327_2019)

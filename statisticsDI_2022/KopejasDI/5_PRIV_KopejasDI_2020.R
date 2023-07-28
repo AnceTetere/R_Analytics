@@ -1,4 +1,4 @@
-setwd('F:\\Dati')
+setwd('F:\\DatiSMUD')
 
 library(XLConnect)
 wb <- loadWorkbook("NOZ_SEKT_20.xlsx",
@@ -19,7 +19,7 @@ paste(
   "Privātajā sektorā kopējās darbaspēka izmaksas Latvijā 2020. gadā:",
   sprintf("%.1f", round(PRIV_ntabl327_2020$G5[PRIV_ntabl327_2020$NOZARE2 == "TOTAL"] / 1000000, 1)),
   "miljoni euro."
-) 
+)
 
 #install.packages("Rmpfr")
 library(Rmpfr)
