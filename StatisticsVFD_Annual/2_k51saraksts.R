@@ -1,4 +1,4 @@
-#1. Gada šablonu
+#1. Gada šablons
 year <- as.character(as.numeric(format(Sys.Date(), "%Y")) - 1)
 path <- paste0("F://DP//VFD//gada//", year, "//project_code")
 
